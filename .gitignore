@@ -1,0 +1,32 @@
+# Dependency directories
+node_modules/
+
+# Environment variables file (if used)
+.env
+
+# Log files
+*.log
+
+# IDE or editor specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/build/
+/dist/
+
+# Cache and temporary files
+.cache/
+.tmp/
+
+# Ignore npm debug log
+npm-debug.log*
+
+# Ignore yarn errors log
+yarn-error.log
