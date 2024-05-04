@@ -2,11 +2,14 @@ const express = require("express");
 const mysql = require("mysql");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
+const compression = require("compression");
 
 const app = express();
 const port = 3000;
 const cors = require("cors");
 const secretKey = "my_secret_key";
+app.use(compression());
+app.use(express.urlencoded({ extended: true }));
 
 // MySQL Connection
 const connection = mysql.createConnection({
