@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const port = 3000;
 const cors = require("cors");
-const secretKey = "my_secret_key"; // Change this to a secure random string
+const secretKey = "my_secret_key";
 
 // MySQL Connection
 const connection = mysql.createConnection({
@@ -31,7 +31,7 @@ app.use(cors());
 // Generate JWT token
 function generateToken(user) {
   return jwt.sign({ id: user.id, email: user.email }, secretKey, {
-    expiresIn: "50s",
+    expiresIn: "1m",
   });
 }
 
@@ -79,7 +79,6 @@ function verifyToken(req, res, next) {
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
-  console.log(token);
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
       return res.status(403).json({ message: "Failed to authenticate token" });
@@ -112,13 +111,65 @@ app.post("/api/addBudget", (req, res) => {
 app.post("/api/addExpense", (req, res) => {
   const { amount, category } = req.body;
   const userId = req.user.id;
-  const newExpense = { user_id: userId, amount, category };
+
+  const sqlQuery = `
+    INSERT INTO expenses (user_id, amount, category)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      amount = VALUES(amount),
+      category = VALUES(category)
+  `;
+
   connection.query(
-    "INSERT INTO expenses SET ?",
-    newExpense,
+    sqlQuery,
+    [userId, amount, category],
     (error, results, fields) => {
       if (error) throw error;
-      res.status(201).json({ message: "expense added successfully" });
+      res.status(201).json({ message: "Expense added successfully" });
+    }
+  );
+});
+
+// Update Budget
+app.put("/api/budgets/:id", (req, res) => {
+  const { id } = req.params;
+  const { amount, category } = req.body;
+
+  connection.query(
+    "UPDATE budgets SET amount = ?, category = ? WHERE id = ?",
+    [amount, category, id],
+    (error, results, fields) => {
+      if (error) {
+        return res.status(500).json({ message: "Failed to update budget" });
+      }
+      if (results.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "Budget not found or unauthorized" });
+      }
+      res.status(200).json({ message: "Budget updated successfully" });
+    }
+  );
+});
+
+// Delete Budget
+app.delete("/api/budgets/:id", (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  connection.query(
+    "DELETE FROM budgets WHERE id = ? AND user_id = ?",
+    [id, userId],
+    (error, results, fields) => {
+      if (error) {
+        return res.status(500).json({ message: "Failed to delete budget" });
+      }
+      if (results.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "Budget not found or unauthorized" });
+      }
+      res.status(200).json({ message: "Budget deleted successfully" });
     }
   );
 });
@@ -149,6 +200,7 @@ app.get("/api/budgets", (req, res) => {
   );
 });
 
+//Get the refresh token
 app.get("/api/refresh-token", (req, res) => {
   const user = req.user;
   if (!user) return res.sendStatus(403);
