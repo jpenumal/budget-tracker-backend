@@ -14,9 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 // MySQL Connection
 const connection = mysql.createConnection({
   host: "sql5.freemysqlhosting.net",
-  user: "sql5702937",
-  password: "Us3t8X7RiN",
-  database: "sql5702937",
+  user: "sql5704530",
+  password: "XxGJee5jNn",
+  database: "sql5704530",
 });
 
 connection.connect((err) => {
